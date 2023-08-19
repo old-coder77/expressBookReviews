@@ -21,9 +21,9 @@ public_users.post("/register", (req,res) => {
     if (username && password) {
       if (!doesExist(username)) { 
         users.push({"username":username,"password":password});
-        return res.status(200).json({message: "User successfully registred. Now you can login"});
+        return res.status(200).json({message: "Customer successfully registred. Now you can login"});
       } else {
-        return res.status(404).json({message: "User already exists!"});    
+        return res.status(404).json({message: "Customer already exists!"});    
       }
     } 
     return res.status(404).json({message: "You must provide both a username and a password"});

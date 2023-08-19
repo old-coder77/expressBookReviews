@@ -40,12 +40,13 @@ regd_users.post("/login", (req,res) => {
     }
     if (authenticatedUser(username,password)) {
       let accessToken = jwt.sign({
-        data: password
+        data: password,
+        user: username
       }, 'access', { expiresIn: 60 * 60 });
       req.session.authorization = {
         accessToken,username
     }
-    return res.status(200).send("User successfully logged in");
+    return res.status(200).send("Customer successfully logged in");
     } else {
       return res.status(208).json({message: "Invalid Login. Check username and password"});
     }
@@ -56,16 +57,17 @@ regd_users.post("/login", (req,res) => {
 regd_users.put("/auth/review/:isbn", (req, res) => {
     const isbn = req.params.isbn;
     const review = req.query["review"];
-    const user = req.user;
+    const user = req.user.user;
     console.log("The ISBN is: " + isbn);
     console.log("The review is " + review);
     console.log("The username is:" + user);
     if (!isNaN(isbn)) {
           const book = books[isbn];
           if (book) {
-            Object.assign(book.reviews, { user: { "review": review } });
+            book.reviews[user] = review;
              console.log("The book reviews are: " + book.reviews);
-              return res.send(JSON.stringify(book.reviews));
+             
+              return res.send("The review for the book with ISBN: " + isbn + " has been added/updated");
           } else {
               return res.status(300).json({message: "Sorry, we do  not carry this book"});
           } 
@@ -73,6 +75,38 @@ regd_users.put("/auth/review/:isbn", (req, res) => {
           return res.status(300).json({message: "Please enter a number"});
       }
    });
+
+  regd_users.delete("/auth/review/:isbn", (req, res) => {
+
+    const isbn = req.params.isbn;
+    const user = req.user.user;
+    console.log("The ISBN is: " + isbn);
+    console.log("The username is:" + user);
+    if (!isNaN(isbn)) {
+          const book = books[isbn];
+          if (book) {
+            review = book.reviews[user];
+             console.log("The book review is before delete: " + review);
+             if (review) {
+                 delete book.reviews[user];
+                 console.log("After delete: " + book.reviews[user])
+                return res.send("The review by customer: " + user  + " for the book with ISBN: " + isbn + " has been deleted");
+             } else{
+                return res.status(300).json({message: "The customer: " + user + " does not have a review for the book with ISBN: " + isbn});
+
+             }
+             
+          } else {
+              return res.status(300).json({message: "Sorry, we do  not carry this book"});
+          } 
+      }else {
+          return res.status(300).json({message: "Please enter a number"});
+      }
+
+    
+    
+});
+
 
 module.exports.authenticated = regd_users;
 module.exports.isValid = isValid;
